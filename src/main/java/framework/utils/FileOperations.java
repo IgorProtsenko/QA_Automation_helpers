@@ -1,8 +1,6 @@
-package framework.utils;
+package com.src.java.framework.utils;
 
-import features.BasePage;
 import framework.DataStore;
-import framework.Loggable;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.testng.Assert;
 import java.io.*;
@@ -12,6 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FileOperations {
+
+    private static final String ERROR_MESSAGE = "Given file was not found or cannot be read";
 
     public Boolean isFileExist(String path) {
         File fileToCheck = new File(path);
@@ -30,7 +30,7 @@ public class FileOperations {
                 }
             }
         } catch (IOException | NullPointerException e) {
-            Assert.fail("Given file cannot be found or read");
+            Assert.fail(ERROR_MESSAGE);
         }
         return false;
     }
@@ -51,7 +51,7 @@ public class FileOperations {
                 fileContent += ("\t" + line + "\n");
             }
         } catch (IOException | NullPointerException e) {
-            Assert.fail("File was not found or couldn't be read");
+            Assert.fail(ERROR_MESSAGE);
         }
         return fileContent;
     }
@@ -61,7 +61,7 @@ public class FileOperations {
         try (ReversedLinesFileReader linesFileReader = new ReversedLinesFileReader(fileToRead)) {
             lineInFile = linesFileReader.readLine();
         } catch (IOException | NullPointerException e) {
-            Assert.fail("File was not found or couldn't be read");
+            Assert.fail(ERROR_MESSAGE);
         }
         return lineInFile;
     }
@@ -79,7 +79,7 @@ public class FileOperations {
                     lines.remove(0);
         } catch (IOException e) {
             if (!ignoreExceptions) {
-                Assert.fail("File was not found or couldn't be read");
+                Assert.fail(ERROR_MESSAGE);
             }
             return "Information not available";
         }
@@ -95,7 +95,7 @@ public class FileOperations {
             }
         }
         catch (IOException | NullPointerException e) {
-            Assert.fail("File was not found or couldn't be read");
+            Assert.fail(ERROR_MESSAGE);
         }
         return fileContent;
     }
@@ -104,7 +104,7 @@ public class FileOperations {
         try {
             Runtime.getRuntime().exec(DataStore.getInstance().getProperties().getProperty(property));
         } catch (IOException e) {
-            Assert.fail("File was not found or cannot be read");
+            Assert.fail(ERROR_MESSAGE);
         }
     }
 
@@ -112,7 +112,7 @@ public class FileOperations {
         try {
             Runtime.getRuntime().exec(path);
         } catch (IOException e) {
-            Assert.fail("File was not found or cannot be read");
+            Assert.fail(ERROR_MESSAGE);
         }
     }
 
@@ -120,7 +120,7 @@ public class FileOperations {
         try {
             new ProcessBuilder(file,  parameter).start();
         } catch (IOException e) {
-            Assert.fail("File was not found or cannot be read");
+            Assert.fail(ERROR_MESSAGE);
         }
     }
 
@@ -134,7 +134,7 @@ public class FileOperations {
             }
         }
         catch (IOException e) {
-            Assert.fail("File cannot be found or read");
+            Assert.fail(ERROR_MESSAGE);
         }
     }
 
@@ -144,7 +144,7 @@ public class FileOperations {
             BasePage.sleepMS(500);
         }
         catch (IOException e) {
-            Assert.fail("File cannot be found or read");
+            Assert.fail(ERROR_MESSAGE);
         }
     }
 }
