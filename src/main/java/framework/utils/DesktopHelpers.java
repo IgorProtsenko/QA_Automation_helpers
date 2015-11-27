@@ -19,8 +19,7 @@ public class DesktopHelpers extends WebHelpers {
     protected Screen sikuli;
     private static final String ERROR_MESSAGE = "Given element/file was not found";
 
-    public DesktopHelpers(WebDriver driver, AutoItX autoit, Screen sikuli) {
-        super(driver);
+    public DesktopHelpers(AutoItX autoit, Screen sikuli) {
         this.autoit = autoit;
         this.sikuli = sikuli;
     }
@@ -32,17 +31,17 @@ public class DesktopHelpers extends WebHelpers {
         autoit.controlClick(window, "", button);
     }
 
-    public void clickSikuli(String element) {
+    public void clickSikuli(String element) throws FindFailed {
         clickSikuli(element, 1);
     }
 
-    public void clickSikuli(String element, int timeout) {
+    public void clickSikuli(String element, int timeout) throws FindFailed {
         try {
             waitForElementDisplayedSikuli(element, timeout);
             sikuli.click(element);
             sleep(1);
         } catch (FindFailed e) {
-            Assert.fail(ERROR_MESSAGE);
+            throw new FindFailed(ERROR_MESSAGE);
         }
     }
 
@@ -51,15 +50,19 @@ public class DesktopHelpers extends WebHelpers {
         autoit.processWaitClose(processName, 5);
     }
 
-    public void copyFile(String source, String destination) {
+    public void closeWindowAutoit(String window) {
+        autoit.winClose(window);
+    }
+
+    public void copyFile(String source, String destination) throws IOException {
         try {
             FileUtils.copyFileToDirectory(new File(source), new File(destination));
         } catch (IOException e) {
-            Assert.fail(ERROR_MESSAGE);
+            throw new IOException(ERROR_MESSAGE);
         }
     }
 
-    public boolean deleteFileOrFolder(String path, boolean isFile, boolean ignoreError) {
+    public boolean deleteFileOrFolder(String path, boolean isFile, boolean ignoreError) throws IOException {
         try {
             if (isFile) {
                 FileUtils.forceDelete(new File(path));
@@ -68,7 +71,7 @@ public class DesktopHelpers extends WebHelpers {
             }
         } catch (IOException e) {
             if (!ignoreError) {
-                Assert.fail(ERROR_MESSAGE);
+                throw new IOException(ERROR_MESSAGE);
             } else {
                 return false;
             }
@@ -76,10 +79,10 @@ public class DesktopHelpers extends WebHelpers {
         return true;
     }
 
-    public List<String> findWindowOrTrayText(String text, boolean isWindow) {
+    public List<String> findWindowOrTrayText(String text, boolean isWindow) throws Exception {
         List <String> windows = new ArrayList<>();
         String arch = System.getProperty("os.arch");
-        Process process = null;
+        Process process;
         try {
             if (isWindow) {
                 if (arch.equals("amd64")) {
@@ -95,10 +98,12 @@ public class DesktopHelpers extends WebHelpers {
                 }
             }
         } catch (IOException e) {
-            Assert.fail(ERROR_MESSAGE);
+            throw new IOException(ERROR_MESSAGE);
         }
         String line;
-        Assert.assertNotNull(process);
+        if (process == null) {
+            throw new NullPointerException(ERROR_MESSAGE);
+        }
         try (BufferedReader stdout = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             while ((line = stdout.readLine()) != null) {
                 if (line.toLowerCase().contains(text.toLowerCase())) {
@@ -163,34 +168,34 @@ public class DesktopHelpers extends WebHelpers {
         sleep(1);
     }
 
-    public void rightClickSikuli(String element) {
+    public void rightClickSikuli(String element) throws FindFailed {
         rightClickSikuli(element, 1);
     }
 
-    public void rightClickSikuli(String element, int timeout) {
+    public void rightClickSikuli(String element, int timeout) throws FindFailed {
         try {
             waitForElementDisplayedSikuli(element, timeout);
             sikuli.rightClick(element);
             sleep(1);
         } catch (FindFailed e) {
-            Assert.fail(ERROR_MESSAGE);
+            throw new FindFailed(ERROR_MESSAGE);
         }
     }
 
-    public void runFileAutoit(String path) {
+    public void runFileAutoit(String path) throws IOException {
         if (autoit.run(path) == 0) {
-            Assert.fail(ERROR_MESSAGE);
+            throw new IOException(ERROR_MESSAGE);
         }
     }
 
-    public void typeSikuli(String element, String text, boolean clickBefore) {
+    public void typeSikuli(String element, String text, boolean clickBefore) throws FindFailed {
         try {
             if (clickBefore) {
                 sikuli.click(element);
             }
             sikuli.type(text);
         } catch (FindFailed e) {
-            Assert.fail(ERROR_MESSAGE);
+            throw new FindFailed(ERROR_MESSAGE);
         }
     }
 
@@ -201,15 +206,29 @@ public class DesktopHelpers extends WebHelpers {
         } catch (FindFailed ignored) {}
     }
 
-    public void waitForElementDisplayedSikuli(String element, int timeout) {
+    public void sleep(int seconds) {
+        autoit.sleep(seconds * 1000);
+    }
+
+    public void takeScreenshot() {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat formatterDate = new SimpleDateFormat("dd.MM.yyyy");
+        SimpleDateFormat formatterTime = new SimpleDateFormat("HH.mm");
+        BufferedImage image = null;
         try {
-            sikuli.wait(element, (double) timeout);
-        } catch (FindFailed e) {
-            Assert.fail(ERROR_MESSAGE);
+            image = new Robot().createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
+            ImageIO.write(image, "png", new File(System.getProperty("user.dir") + "\\log\\(Time)_" + formatterTime.format(calendar.getTime()) + "__(Date)_" +
+                    formatterDate.format(calendar.getTime()) + ".png"));
+        } catch (AWTException | IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public void closeWindowAutoit(String window) {
-        autoit.winClose(window);
+    public void waitForElementDisplayedSikuli(String element, int timeout) throws FindFailed {
+        try {
+            sikuli.wait(element, (double) timeout);
+        } catch (FindFailed e) {
+            throw new FindFailed(ERROR_MESSAGE);
+        }
     }
 }

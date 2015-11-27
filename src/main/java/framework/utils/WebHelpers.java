@@ -407,7 +407,7 @@ public class WebHelpers {
         this.driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
     }
 
-    public void smartClick(WebElement element) {
+    public void smartClick(WebElement element) throws WebDriverException {
         String url = driver.getCurrentUrl();
         String title = driver.getTitle();
         int windowNumber = driver.getWindowHandles().size();
@@ -432,11 +432,30 @@ public class WebHelpers {
                 if (driver.getWindowHandles().size() > windowNumber) return;
                 if (driver.getCurrentUrl().equals(url) & driver.getTitle().equals(title)) {
                     jsExecute("arguments[0].click()", element);
+                    sleep(2);
+                    if (driver.getWindowHandles().size() > windowNumber) return;
+                    if (driver.getCurrentUrl().equals(url) & driver.getTitle().equals(title)) {
+                        jsExecute("arguments[0].click()", element);
+                        sleep(2);
+                    }
+                    if (driver.getWindowHandles().size() > windowNumber) return;
+                    if (driver.getCurrentUrl().equals(url) & driver.getTitle().equals(title)) {
+                        counter[2] = 0;
+                        throw new WebDriverException("Could not click on element to chance the page");
+                    }
                 }
             }
         } catch (WebDriverException ignored) {}
         counter[2] = 0;
         sleep(2);
+    }
+
+    public void navigateToElement(WebElement element) {
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+    }
+
+    public void makeElementVisible(WebElement element) {
+        ((JavascriptExecutor) driver).executeScript("arguments[0].style.display='block';", element);
     }
 
     public void takeScreenshot() {
